@@ -8,7 +8,7 @@ def initialize_settings():
 
 
 def list_filenames():
-    filenames = [name.split('.')[0] for name in os.listdir('.') if name.endswith('.xml')]
+    filenames = [name for name in os.listdir('.')]
     return filenames
 
 
@@ -21,13 +21,13 @@ def list_search_terms():
         return search_terms
 
 
-def check_relevance(abstract_narration, search_terms):
+def check_relevance(element, search_terms, grant_app):
 
-    try:
-        abstract = set(abstract_narration.split())
-    except AttributeError:
-        print('No abstract')
-        pass
+    if element.text == True:
+
+
+    else:
+        print('Missing Abstract')
 
     terms = set(search_terms)
 
@@ -35,49 +35,52 @@ def check_relevance(abstract_narration, search_terms):
 
     print('; '.join(matching_terms))
 
-    return matching_terms
+    return relevance
 
+
+def record_element(grant_app, element):
+    """
+    Create dictionary key/value pair based on XML element key/text.
+
+    :param grant_app: dictionary of XML document data
+    :param element: an individual XML element
+    :return: dictionary with new key/value pair based on xml element
+    """
+     grant_app[element.tag] = element.text
+     return grant_app
 
 
 def parse_xml(xml_file, search_terms, column_names):
-
     # initialize storage for extracted XML data
     grant_app = {}
 
-    for (event, node) in iterparse(xml_file + '.xml'):
+    for (event, element) in iterparse(xml_file):
+        if event == 'end' and element.text != '\n':
+            yield element
 
-        if event == 'end' and node.text != '\n':
 
-            grant_app[node.tag] = node.text
+        if event == 'end' and element.text != '\n':
+           grant_app = record_element(grant_app, element)
 
             if node.tag not in column_names:
                 column_names.append(node.tag)
 
             if node.tag == 'AbstractNarration':
+                relevance = check_relevance()
 
-                abstract_narration = node.text
-
-                if abstract_narration == True:
-
-                    matching_terms = check_relevance(abstract_narration, search_terms)
-
-                    if matching_terms == True:
-                        grant_app['matchingTerms'] = '; '.join(matching_terms)
-                    else:
-                        pass
+                if relevance == True:
+                    continue
                 else:
-                    print('no abstract')
                     pass
-
     print(len(column_names), grant_app)
     return(grant_app)
 
 
-def write_csv(data_mgmt_plans):
+def write_csv(grant_apps):
     with open('nsf_dmps.csv', 'w') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames)
         writer.writeheader()
-#         writer.writerows(data_mgmt_plans)
+        writer.writerows(grant_apps)
 
 
 def main():
@@ -93,4 +96,5 @@ def main():
 
     write_csv(grant_apps, column_names)
 
-main()
+if __name__ == '__main__':
+    main()

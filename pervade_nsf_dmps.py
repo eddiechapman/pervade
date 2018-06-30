@@ -1,6 +1,6 @@
 import os
-import re
 import csv
+import itertools
 import xml.etree.ElementTree as ET
 
 
@@ -14,21 +14,10 @@ def set_directory():
 def list_search_terms():
     """
     Open a text file. Change each line to lowercase and store it in a list.
-    Display the entries for the user.
     """
     with open('search_terms.txt', 'r') as infile:
-        search_terms = [line.strip().lower() for line in infile]
-        print('Search terms:', search_terms)
+        search_terms = {line.strip().lower() for line in infile}
         return search_terms
-
-
-def compile_regex_queries(search_terms):
-    """
-    Create list of compiled regex queries that the XML abstracts will be checked
-    against. Regex pattern specifies exact match.
-    """
-    regex_queries = [re.compile(term) for term in search_terms]
-    return regex_queries
 
 
 def generate_filenames():
@@ -41,130 +30,141 @@ def generate_filenames():
             yield filenames
 
 
-def determine_relevancy(filenames, search_terms):
+def initialize_storage(filenames):
     """
-    Inspect each XML file and list the relevant hits.
+    Create a dictionary for each iteration of the filename generator. Store the
+    filename. This dictionary will be passed along and filled with other values.
+    """
+    for filename in filenames:
+        document_fields = {}
+        document_fields['filename'] = filename
+        yield document_fields
 
-    Loop through all XML files in directory. Call relevance-checking function.
-    For relevant files, store filename and matching search terms in a dictionary
-    ('file_info). Each relevant file's dictionary is stored in a list
-    ('relevant_docs').
+
+def load_xml(document_fields):
     """
-    relevant_docs = []
-    for file in filenames:
-        file_info = {}
-        relevance = query_abstract(file, search_terms)
-        if relevance:
-            print(file, 'RELEVANT:', relevance)
-            file_info['Filename'] = file
-            file_info['MatchingTerms'] = relevance
-            relevant_docs.append(file_info)
+    Use the filename value from the iteration's dictionary to create and store
+    an XML tree object.
+    """
+    for document in document_fields:
+        filename = document['filename']
+        document['tree'] = ET.parse(filename)
+        yield document
+
+
+def find_abstract(document_fields):
+    """
+    Use the tree value from the dictionary to retrieve the text of the Abstract
+    element. If the Abstract element is blank, the file iteration is dropped.
+    """
+    for document in document_fields:
+        tree = document['tree']
+        abstract = tree.findtext('./Award/AbstractNarration')
+        if abstract:
+            document['abstract'] = abstract
+            yield document
         else:
-            continue
-    return relevant_docs
+            pass
 
 
-def query_abstract(file, regex_queries):
+def split_abstract(document_fields):
     """
-    Find the document's abstract. Search abstract for regex matches. Return hits.
-
-    Iterate through each element of the XML tree. Wait until end of
-    'AbstractNarration' element and grab the text. If there is text in the
-    abstract element, run all regex queries against abstract text. Store results
-    in a set to prevent duplicate entries. Return set of relevant terms if not
-    empty. Otherwise, return boolean, False.
+    Split the abstract text entry from the dictionary into sentences (roughly).
+    Store them in a new entry in the dictionary.
     """
-    for event, elem in ET.iterparse(file):
-        if event == 'end' and elem.tag == 'AbstractNarration':
-            abstract = elem.text
-            if abstract:
-                relevance = set()
-                for query in regex_queries:
-                    match = query.search(abstract)
-                    if match:
-                        relevance.add(match.group())
-                    else:
-                        continue
-                if relevance:
-                    return relevance
-                else:
-                    return False
-            else:
-                return False
+    for document in document_fields:
+        abstract = document['abstract']
+        document['lines_abstract'] = abstract.split('. ')
+        yield document
+
+
+def query_abstract(document_fields, search_terms):
+    """
+    Find and save matching pairs of search terms and abstract sentences.
+
+    The abstract sentences are retrieved from the dictionary. They are passed
+    to itertools.product along with the search terms which returns
+    their combinations as tuples. Inspecting each tuple, if the search term
+    is found in the abstract sentence, both values are stored. Abstract
+    sentences are stored in a set to prevent duplication. Search terms can be
+    stored multiple times. If there are values in both storage locations, they
+    are joined as strings and saved as values in the dictionary. Otherwise, the
+    iterating document is dropped.
+    """
+    for document in document_fields:
+        abstract_matches = set()
+        search_term_matches = []
+        lines_abstract = document['lines_abstract']
+        results = itertools.product(lines_abstract, search_terms)
+        for line_abstract, search_term in results:
+            if search_term in line_abstract:
+                abstract_matches.add(line_abstract)
+                search_term_matches.append(search_term)
+        if abstract_matches and search_term_matches:
+            document['relevant_lines'] = '; \n\n'.join(list(abstract_matches))
+            document['relevant_terms'] = '; \n\n'.join(search_term_matches)
+            yield document
         else:
-            elem.clear()
+            pass
 
 
-def parse_xml(relevant_docs):
+def add_title(document_fields):
     """
-    Iterate through XML document tree and save text fields in a dictionary.
-
-    Loop through each relevant document's dictioanry. Open the XML document using
-    the 'Filename' key. Iterate through all elements in XML tree. Wait until the
-    end of a tag to add the element's tag and text as a key/value pair in the
-    document's dictionary.
-
-    Some XML elements may be repeated (institution, investigator). To prevent
-    overwriting dictionary entries, a 'repeat_elem_count' dictionary counts the
-    number of times that duplicate elements appear. This count is added to the
-    end of the document dictionary key to differenciate from previous repeat
-    entries.
-
-    The XML element is cleared from the tree each time the text value is stored.
+    Find the title using the XML element tree stored in the dictionary. Create
+    a new dictionary entry for the title.
     """
-    for doc in relevant_docs:
-        repeat_elem_count = {}
-        for event, elem in ET.iterparse(doc['Filename']):
-            if event == 'end':
-                if elem.tag in doc:
-                    doc[elem.tag] = elem.text
-                elif elem.tag in doc:
-                    if elem.tag in repeat_elem_count:
-                        repeat_elem_count[elem.tag] += 1
-                    else:
-                        repeat_elem_count[elem.tag] = 1
-                    doc[elem.tag + str(repeat_elem_count[elem.tag])] = elem.text
-            elem.clear()
-        repeat_elem_count.clear()
+    for document in document_fields:
+        tree = document['tree']
+        title = tree.findtext('./Award/AwardTitle')
+        document['title'] = title
+        yield document
 
 
-def record_column_names(relevant_docs):
+def remove_unused_fields(document_fields):
     """
-    List all possible key values in document dictionary to be used as CSV fieldnames.
-
-    The number of unique key values cannot be predetermined because some documents
-    may have many repeated elements.
+    Remove the dictionary values for the XML tree and the individual abstract
+    lines as they will not be needed when saving a CSV using the dictionary.
     """
-    column_names = []
-    for doc in relevant_docs:
-        for key in doc.keys():
-            if key not in column_names:
-                column_names.append(key)
-            else:
-                continue
-    print(column_names)
-    return column_names
+    for document in document_fields:
+        del document['tree']
+        del document['lines_abstract']
+        yield document
 
 
-def write_csv(relevant_docs, column_names):
+def compile_relevant_files(document_fields, relevant_files):
+    """
+    Store any document dictionaries that have made it this far in a list to
+    be turned into a CSV.
+    """
+    for document in document_fields:
+        relevant_files.append(document)
+
+
+def write_csv(relevant_files):
     """
     Create a CSV file with one row for each XML file.
     """
     with open('nsf_dmps.csv', 'w') as csv_file:
+        column_names = relevant_files[0].keys()
         writer = csv.DictWriter(csv_file, column_names)
         writer.writeheader()
-        writer.writerows(relevant_docs)
+        writer.writerows(relevant_files)
 
 
 def main():
     set_directory()
     search_terms = list_search_terms()
-    regex_queries = compile_regex_queries(search_terms)
+    relevant_files = []
     filenames = generate_filenames()
-    relevant_docs = determine_relevancy(filenames, regex_queries)
-    parse_xml(relevant_docs)
-    column_names = record_column_names(relevant_docs)
-    write_csv(relevant_docs, column_names)
+    document_fields = initialize_storage(filenames)
+    document_fields = load_xml(document_fields)
+    document_fields = find_abstract(document_fields)
+    document_fields = split_abstract(document_fields)
+    document_fields = query_abstract(document_fields, search_terms)
+    document_fields = add_title(document_fields)
+    document_fields = remove_unused_fields(document_fields)
+    compile_relevant_files(document_fields, relevant_files)
+    write_csv(relevant_files)
 
 
 if __name__ == '__main__':

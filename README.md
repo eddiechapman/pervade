@@ -7,9 +7,14 @@ Part of the PERVADE project on internet research ethics: https://pervade.umd.edu
 
 ## Getting Started
 
-Download the NSF award data dumps by year from https://www.nsf.gov/awardsearch/download.jsp. Extract all XML files to a shared folder. 
+### Download Award Data
 
-Modify or create a text file called 'search_terms.txt'. Add one search term per line. Store the file in the folder with the XML files.
+Download the NSF award data dumps by year: https://www.nsf.gov/awardsearch/download.jsp. 
+Extract all XML files to a shared folder. 
 
-In pervade_award_parser.py, edit the path in set_directory() to reflect the location of the XML files. 
+### Specify search terms
+Modify or create a text file called `search_terms.txt`. Add one search term per line. Store the file in the folder with the XML files.
+
+### Specify document location
+In `pervade_award_parser.py`, edit the path in `set_directory()` to reflect the location of the XML files. 
 

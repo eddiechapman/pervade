@@ -5,36 +5,26 @@ import xml.etree.ElementTree as ET
 
 
 def set_directory():
-    """
-    Specify the file path that the XML files and 'search_terms.txt' are located.
-    """
+    """Specify where the xml and txt files are located on the user's computer."""
     os.chdir('C:\\Users\\chapman4\\PycharmProjects\\pervade_nsf_dmps\\dmps')
 
-
-def list_search_terms():
-    """
-    Open a text file. Change each line to lowercase and store it in a list.
-    """
+                                                                                 x
+def retrieve_search_terms():
+    """Open a text file. Store each line in a set. Return the set."""
     with open('search_terms.txt', 'r') as infile:
         search_terms = {line.strip().lower() for line in infile}
         return search_terms
 
 
 def generate_filenames():
-    """
-    Open current file directory and return filenames of XML files. Returns
-    generator object.
-    """
+    """Generate a sequence of filenames ending in '.xml'."""
     for filenames in os.listdir('.'):
         if filenames.endswith('.xml'):
             yield filenames
 
 
 def initialize_storage(filenames):
-    """
-    Create a dictionary for each iteration of the filename generator. Store the
-    filename. This dictionary will be passed along and filled with other values.
-    """
+    """Generate a dictionary for each filename. Store the filename."""
     for filename in filenames:
         document_fields = {}
         document_fields['filename'] = filename
@@ -42,10 +32,7 @@ def initialize_storage(filenames):
 
 
 def load_xml(document_fields):
-    """
-    Use the filename value from the iteration's dictionary to create and store
-    an XML tree object.
-    """
+    """Create and store an xml tree object in each dictionary."""
     for document in document_fields:
         filename = document['filename']
         document['tree'] = ET.parse(filename)
@@ -53,10 +40,7 @@ def load_xml(document_fields):
 
 
 def find_abstract(document_fields):
-    """
-    Use the tree value from the dictionary to retrieve the text of the Abstract
-    element. If the Abstract element is blank, the file iteration is dropped.
-    """
+    """Find and store the xml abstract text in each dictionary, if found."""
     for document in document_fields:
         tree = document['tree']
         abstract = tree.findtext('./Award/AbstractNarration')
@@ -68,10 +52,7 @@ def find_abstract(document_fields):
 
 
 def split_abstract(document_fields):
-    """
-    Split the abstract text entry from the dictionary into sentences (roughly).
-    Store them in a new entry in the dictionary.
-    """
+    """Split the abstract text into sentences and store them in the dictionaries."""
     for document in document_fields:
         abstract = document['abstract']
         document['lines_abstract'] = abstract.split('. ')
@@ -79,18 +60,7 @@ def split_abstract(document_fields):
 
 
 def query_abstract(document_fields, search_terms):
-    """
-    Find and save matching pairs of search terms and abstract sentences.
-
-    The abstract sentences are retrieved from the dictionary. They are passed
-    to itertools.product along with the search terms which returns
-    their combinations as tuples. Inspecting each tuple, if the search term
-    is found in the abstract sentence, both values are stored. Abstract
-    sentences are stored in a set to prevent duplication. Search terms can be
-    stored multiple times. If there are values in both storage locations, they
-    are joined as strings and saved as values in the dictionary. Otherwise, the
-    iterating document is dropped.
-    """
+    """Compare abstract sentences to search terms. Save matching pairs."""
     for document in document_fields:
         abstract_matches = set()
         search_term_matches = []
@@ -109,10 +79,7 @@ def query_abstract(document_fields, search_terms):
 
 
 def add_title(document_fields):
-    """
-    Find the title using the XML element tree stored in the dictionary. Create
-    a new dictionary entry for the title.
-    """
+    """Find and add the XML title field to the dictionary."""
     for document in document_fields:
         tree = document['tree']
         title = tree.findtext('./Award/AwardTitle')
@@ -121,10 +88,7 @@ def add_title(document_fields):
 
 
 def remove_unused_fields(document_fields):
-    """
-    Remove the dictionary values for the XML tree and the individual abstract
-    lines as they will not be needed when saving a CSV using the dictionary.
-    """
+    """Remove XML tree and abstract sentences from the dictionaries."""
     for document in document_fields:
         del document['tree']
         del document['lines_abstract']
@@ -132,18 +96,13 @@ def remove_unused_fields(document_fields):
 
 
 def compile_relevant_files(document_fields, relevant_files):
-    """
-    Store any document dictionaries that have made it this far in a list to
-    be turned into a CSV.
-    """
+    """Store completed dictionaries in a list."""
     for document in document_fields:
         relevant_files.append(document)
 
 
 def write_csv(relevant_files):
-    """
-    Create a CSV file with one row for each XML file.
-    """
+    """Store data from completed dictionaries in a CSV."""
     with open('nsf_dmps.csv', 'w') as csv_file:
         column_names = relevant_files[0].keys()
         writer = csv.DictWriter(csv_file, column_names)
@@ -153,7 +112,7 @@ def write_csv(relevant_files):
 
 def main():
     set_directory()
-    search_terms = list_search_terms()
+    search_terms = retrieve_search_terms()
     relevant_files = []
     filenames = generate_filenames()
     document_fields = initialize_storage(filenames)

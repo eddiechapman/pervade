@@ -1,13 +1,15 @@
-# pervade
+# PERVADE Award Parser
 
-### About
-A program to parse XML files from the National Science Foundation's database of successful grant applications. Returns a CSV file of the desired grant applications based on keywords provided in a text file. 
+This program parses National Science Foundataion (NSF) award data in XML format and stores elements of relevant awards in a CSV file. 
 
-### Issues
-Currently the process to loop through fields is wonky. Some fields (institution, investigator etc.) can appear multiple times and have multiple subfields. I need to reduce the amount of duplication because the current script is creating columns for fields that could never exist. 
+Part of the PERVADE project on internet research ethics: https://pervade.umd.edu/about/
 
-I also need to improve the keyword searching feature. I didn't really test it out. It would be good if it saved the number of keywords or phrases that were a match. 
 
-A number of applications do not have abstracts, which is how relevance is being determined. It would be good to save a list of these for future manual inspection. 
+## Getting Started
 
-Also, code name references to "data management plans" are misleading because we don't actually have those yet. Rather, they should be called "grant applications". 
+Download the NSF award data dumps by year from https://www.nsf.gov/awardsearch/download.jsp. Extract all XML files to a shared folder. 
+
+Modify or create a text file called 'search_terms.txt'. Add one search term per line. Store the file in the folder with the XML files.
+
+In pervade_award_parser.py, edit the path in set_directory() to reflect the location of the XML files. 
+

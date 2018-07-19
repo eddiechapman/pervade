@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 def set_directory():
     """Specify where the xml and txt files are located on the user's computer."""
-    os.chdir('C:\\Users\\chapman4\\PycharmProjects\\pervade_nsf_dmps\\test')
+    os.chdir('C:\\Users\\chapman4\\PycharmProjects\\pervade_nsf_dmps\\dmps')
 
 
 def retrieve_search_terms():
@@ -35,8 +35,12 @@ def load_xml(award_fields):
     """Create and store an xml tree object in each dictionary."""
     for award in award_fields:
         filename = award['filename']
-        award['tree'] = ET.parse(filename)
-        yield award
+        try:
+            award['tree'] = ET.parse(filename)
+            yield award
+        except Exception:
+            print(filename, Exception)
+            pass
 
 
 def find_abstract(award_fields):
@@ -51,11 +55,10 @@ def find_abstract(award_fields):
             pass
 
 
-def split_abstract(award_fields):
+def tokenize_abstract(award_fields):
     """Split the abstract text into sentences and store them in the dictionaries."""
     for award in award_fields:
-        abstract = award['abstract']
-        award['lines_abstract'] = abstract.split('. ')
+        award['lines_abstract'] = award['abstract'].lower().split('. ')
         yield award
 
 
@@ -97,57 +100,17 @@ def add_title(award_fields):
             element = tree.findall('./Award/' + field)
             for elem in element:
                 award[field + elem.tag] = elem.text
-                print(elem.tag + '===' + elem.text)
         for multi_field in multi_fields:
             elem_blocks = tree.findall('./Award/' + multi_field)
             for i, block in enumerate(elem_blocks, 1):
-                for sub_elem in block.iter():
-                    if sub_elem is None:
+                elems = block.findall('./*')
+                for elem in elems:
+                    if elem.text is None:
                         continue
                     else:
-                        award[multi_field + str(i) + sub_elem.tag] = sub_elem.text
-                        print(sub_elem.tag + '===' + sub_elem.text)
+                        award[multi_field + str(i) + elem.tag] = elem.text
         yield award
 
-
-# def add_title(award_fields):
-#     """Find and add the XML title field to the dictionary."""
-#     single_fields = [
-#         'AwardTitle', 'AwardEffectiveDate', 'AwardExpirationDate', 'AwardAmount',
-#         'Value', 'SignBlockName', 'MinAmdLetterDate', 'MaxAmdLetterDate', 'AwardID',
-#     ]
-#     nested_fields = {'Organization': 'Org'}
-#     multi_fields = {
-#         'Investigator': 'Inv', 'Institution': 'Inst', 'ProgramElement': 'ProElem',
-#         'ProgramReference': 'ProRef',
-#     }
-#     for award in award_fields:
-#         tree = award['tree']
-#         for single_field in single_fields:
-#             elem = tree.find(single_field)
-#             if elem is None:
-#                 continue
-#             else:
-#                 award[elem.tag] = elem.text
-#                 print('single', elem.tag, elem.text)
-#         for nested_field in nested_fields:
-#             elems = award['tree'].find('.//' + nested_field + '/*')
-#             for elem in elems:
-#                 if elem is None:
-#                     continue
-#                 else:
-#                     award[nested_fields[nested_field] + elem.tag] = elem.text
-#                     print('nested', elem.tag, elem.text)
-#         for multi_field in multi_fields:
-#             elems = award['tree'].findall(multi_field)
-#             for i, elem in enumerate(elems):
-#                 for e in elem.iter():
-#                     if e is None:
-#                         continue
-#                     else:
-#                         award[multi_field[multi_field] + str(i) + e.tag] = e.text
-#                         print('multi', e.tag, e.text)
-#     yield award
 
 def remove_unused_fields(award_fields):
     """Remove XML tree and abstract sentences from the dictionaries."""
@@ -189,7 +152,7 @@ def main():
     award_fields = initialize_storage(filenames)
     award_fields = load_xml(award_fields)
     award_fields = find_abstract(award_fields)
-    award_fields = split_abstract(award_fields)
+    award_fields = tokenize_abstract(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)

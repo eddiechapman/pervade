@@ -106,20 +106,16 @@ def ngram_word_tokens(award_fields):
         yield award
 
 
-def query_abstract(award_fields, search_terms):
-    """Compare abstract sentences to search terms. Save matching pairs."""
+def query_ngrams(award_fields, search_terms):
+    """By sentence, compare ngrams to search terms and save results."""
     for award in award_fields:
-        abstract_matches = set()
-        search_term_matches = []
-        lines_abstract = award['lines_abstract']
-        results = itertools.product(lines_abstract, search_terms)
-        for line_abstract, search_term in results:
-            if search_term in line_abstract:
-                abstract_matches.add(line_abstract)
-                search_term_matches.append(search_term)
-        if abstract_matches and search_term_matches:
-            award['relevant_lines'] = '; \n\n'.join(list(abstract_matches))
-            award['relevant_terms'] = '; \n\n'.join(search_term_matches)
+        award['query_hits'] = set()
+        for sentence in award['ngrams']:
+            query_hits = sentence.intersection(search_terms)
+            if query_hits:
+                print(query_hits)
+                award['query_hits'] = award['query_hits'].union(query_hits)
+        if award['query_hits']:
             yield award
         else:
             pass
@@ -201,6 +197,7 @@ def main():
     award_fields = lower_sentence_tokens(award_fields)
     award_fields = tokenize_words(award_fields)
     award_fields = ngram_word_tokens(award_fields)
+    award_fields = query_ngrams(award_fields, search_terms)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)

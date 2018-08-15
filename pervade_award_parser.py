@@ -2,6 +2,7 @@ import os
 import csv
 import itertools
 import xml.etree.ElementTree as ET
+from nltk import sent_tokenize
 
 
 def set_directory():
@@ -61,10 +62,11 @@ def replace_abstract_html(award_fields):
         award['abstract'] = award['abstract'].replace('<br/>', '\n')
         yield award
 
-def tokenize_abstract(award_fields):
-    """Split the abstract text into sentences and store them in the dictionaries."""
+
+def tokenize_sentences(award_fields):
+    """Split the abstract text into individual sentences."""
     for award in award_fields:
-        award['lines_abstract'] = award['abstract'].lower().split('. ')
+        award['sentence_tokens'] = sent_tokenize(award['abstract'])
         yield award
 
 
@@ -159,7 +161,7 @@ def main():
     award_fields = load_xml(award_fields)
     award_fields = find_abstract(award_fields)
     award_fields = replace_abstract_html(award_fields):
-    award_fields = tokenize_abstract(award_fields)
+    award_fields = tokenize_sentences(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)

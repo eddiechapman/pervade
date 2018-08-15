@@ -3,6 +3,7 @@ import csv
 import itertools
 import xml.etree.ElementTree as ET
 from nltk import sent_tokenize, word_tokenize
+from nltk.util import ngrams
 
 
 def set_directory():
@@ -84,6 +85,19 @@ def tokenize_words(award_fields):
         for sentence_token in award['sentence_tokens']:
             word_tokens = word_tokenize(sentence_token)
             award['word_tokens'].append(word_tokens)
+        yield award
+
+
+def ngram_word_tokens(award_fields):
+    """Create uni-, bi-, and trigrams from abstract word tokens."""
+    for award in award_fields:
+        award['ngrams'] = []
+        for n in [1, 2, 3]:
+            for sentence_group in award['word_tokens']:
+                ngrams_array = ngrams(sentence_group, n)
+                ngrams_joined = [' '.join(ngrams) for ngrams in ngrams_array]
+                ngrams_set = set(ngrams_joined)
+                award['ngrams'].append(ngrams_set)
         yield award
 
 
@@ -181,6 +195,7 @@ def main():
     award_fields = tokenize_sentences(award_fields)
     award_fields = lower_sentence_tokens(award_fields)
     award_fields = tokenize_words(award_fields)
+    award_fields = ngram_word_tokens(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)

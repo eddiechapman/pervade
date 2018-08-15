@@ -54,7 +54,7 @@ def find_abstract(award_fields):
             award['abstract'] = abstract
             yield award
         else:
-            pass
+            del award
 
 
 def replace_abstract_html(award_fields):
@@ -118,7 +118,7 @@ def query_ngrams(award_fields, search_terms):
         if award['query_hits']:
             yield award
         else:
-            pass
+            del award
 
 
 def add_title(award_fields):

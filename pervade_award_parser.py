@@ -64,11 +64,16 @@ def replace_abstract_html(award_fields):
 
 
 def tokenize_sentences(award_fields):
-    """Split the abstract text into individual sentences, in lowercase."""
+    """Split the abstract text into individual sentences."""
     for award in award_fields:
-        sentence_tokens = sent_tokenize(award['abstract'])
-        sentence_tokens_lowercase = [token.lower() for token in sentence_tokens]
-        award['sentence_tokens'] = sentence_tokens_lowercase
+        award['sentence_tokens'] = sent_tokenize(award['abstract'])
+        yield award
+
+
+def lower_sentence_tokens(award_fields):
+    """Change uppercase letters in sentence tokens to lowercase."""
+    for award in award_fields:
+        award['sentence_tokens'] = [token.lower() for token in award['sentence_tokens']]
         yield award
 
 

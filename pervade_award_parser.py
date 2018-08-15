@@ -179,6 +179,7 @@ def main():
     award_fields = find_abstract(award_fields)
     award_fields = replace_abstract_html(award_fields)
     award_fields = tokenize_sentences(award_fields)
+    award_fields = lower_sentence_tokens(award_fields)
     award_fields = tokenize_words(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)

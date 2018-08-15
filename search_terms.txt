@@ -1,0 +1,54 @@
+app data
+digital footprint
+facebook account
+facebook data
+online profile
+private user data
+public user
+quora
+transaction data
+twitter account
+twitter feed
+user interaction data
+comment thread
+pinterest
+private social
+smartphone data
+smart phone data
+twitter user
+web scrapping
+locational data
+anonymized data
+private user
+public social
+user profile
+linkedin
+flickr
+social graph
+location tracking
+clickstream
+click stream
+public dataset
+profile data
+twitter data
+user information
+social data
+social network data
+interaction data
+user's data
+log data
+scrape
+scraping
+freely available online
+user data
+gps data
+personal information
+social media data
+private information
+public data
+sensitive information
+data from facebook
+data from twitter
+data from pintrest
+data from flickr
+data from linkedin

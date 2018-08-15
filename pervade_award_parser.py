@@ -84,6 +84,7 @@ def tokenize_words(award_fields):
         for sentence_token in award['sentence_tokens']:
             word_tokens = word_tokenize(sentence_token)
             award['word_tokens'].append(word_tokens)
+        yield award
 
 
 def query_abstract(award_fields, search_terms):

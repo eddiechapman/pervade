@@ -2,12 +2,12 @@ import os
 import csv
 import itertools
 import xml.etree.ElementTree as ET
-from nltk import sent_tokenize
+from nltk import sent_tokenize, word_tokenize
 
 
 def set_directory():
     """Specify where the xml and txt files are located on the user's computer."""
-    os.chdir('C:\\Users\\chapman4\\PycharmProjects\\pervade_nsf_dmps\\dmps')
+    os.chdir('/home/eddie/Downloads/nsf_awards')
 
 
 def retrieve_search_terms():
@@ -64,10 +64,21 @@ def replace_abstract_html(award_fields):
 
 
 def tokenize_sentences(award_fields):
-    """Split the abstract text into individual sentences."""
+    """Split the abstract text into individual sentences, in lowercase."""
     for award in award_fields:
-        award['sentence_tokens'] = sent_tokenize(award['abstract'])
+        sentence_tokens = sent_tokenize(award['abstract'])
+        sentence_tokens_lowercase = [token.lower() for token in sentence_tokens]
+        award['sentence_tokens'] = sentence_tokens_lowercase
         yield award
+
+
+def tokenize_words(award_fields):
+    """Split the abstract sentences into individual words."""
+    for award in award_fields:
+        award['word_tokens'] = []
+        for sentence_token in award['sentence_tokens']:
+            word_tokens = word_tokenize(sentence_token)
+            award['word_tokens'].append(word_tokens)
 
 
 def query_abstract(award_fields, search_terms):
@@ -160,8 +171,9 @@ def main():
     award_fields = initialize_storage(filenames)
     award_fields = load_xml(award_fields)
     award_fields = find_abstract(award_fields)
-    award_fields = replace_abstract_html(award_fields):
+    award_fields = replace_abstract_html(award_fields)
     award_fields = tokenize_sentences(award_fields)
+    award_fields = tokenize_words(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)

@@ -55,6 +55,12 @@ def find_abstract(award_fields):
             pass
 
 
+def replace_abstract_html(award_fields):
+    """Replace html <br/> tags with actual linebreaks."""
+    for award in award_fields:
+        award['abstract'] = award['abstract'].replace('<br/>', '\n')
+        yield award
+
 def tokenize_abstract(award_fields):
     """Split the abstract text into sentences and store them in the dictionaries."""
     for award in award_fields:
@@ -152,6 +158,7 @@ def main():
     award_fields = initialize_storage(filenames)
     award_fields = load_xml(award_fields)
     award_fields = find_abstract(award_fields)
+    award_fields = replace_abstract_html(award_fields):
     award_fields = tokenize_abstract(award_fields)
     award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)

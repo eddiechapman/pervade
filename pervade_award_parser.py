@@ -92,10 +92,15 @@ def ngram_word_tokens(award_fields):
     """Create uni-, bi-, and trigrams from abstract word tokens."""
     for award in award_fields:
         award['ngrams'] = []
+        # n represents uni- bi- and trigrams
         for n in [1, 2, 3]:
+            # keep ngrams sorted by sentence
             for sentence_group in award['word_tokens']:
+                # create list of ngram tuples
                 ngrams_array = ngrams(sentence_group, n)
+                # join tuples as strings
                 ngrams_joined = [' '.join(ngrams) for ngrams in ngrams_array]
+                # convert list to set
                 ngrams_set = set(ngrams_joined)
                 award['ngrams'].append(ngrams_set)
         yield award

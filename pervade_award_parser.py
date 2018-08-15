@@ -198,7 +198,6 @@ def main():
     award_fields = tokenize_words(award_fields)
     award_fields = ngram_word_tokens(award_fields)
     award_fields = query_ngrams(award_fields, search_terms)
-    award_fields = query_abstract(award_fields, search_terms)
     award_fields = add_title(award_fields)
     award_fields = remove_unused_fields(award_fields)
     compile_relevant_awards(award_fields, relevant_awards)

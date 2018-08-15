@@ -156,7 +156,8 @@ def remove_unused_fields(award_fields):
     """Remove XML tree and abstract sentences from the dictionaries."""
     for award in award_fields:
         del award['tree']
-        del award['lines_abstract']
+        del award['word_tokens']
+        del award['ngrams']
         yield award
 
 

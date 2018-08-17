@@ -184,7 +184,7 @@ def write_csv(relevant_awards, column_names):
         writer.writerows(relevant_awards)
 
 
-def main():
+if __name__ == '__main__':
     set_directory()
     search_terms = retrieve_search_terms()
     relevant_awards = []
@@ -204,6 +204,3 @@ def main():
     compile_relevant_awards(award_fields, relevant_awards)
     update_column_names(relevant_awards, column_names)
     write_csv(relevant_awards, column_names)
-
-if __name__ == '__main__':
-    main()

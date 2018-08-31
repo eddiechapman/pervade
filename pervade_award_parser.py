@@ -1,4 +1,5 @@
 import os
+import glob
 import csv
 import itertools
 import xml.etree.ElementTree as ET
@@ -8,7 +9,7 @@ from nltk.util import ngrams
 
 def set_directory():
     """Specify where the xml and txt files are located on the user's computer."""
-    os.chdir('/home/eddie/Downloads/nsf_awards')
+    os.chdir('/home/eddie/Downloads/nsf_awards2')
 
 
 def retrieve_search_terms():
@@ -20,9 +21,8 @@ def retrieve_search_terms():
 
 def generate_filenames():
     """Generate a sequence of filenames ending in '.xml'."""
-    for filenames in os.listdir('.'):
-        if filenames.endswith('.xml'):
-            yield filenames
+    for filenames in glob.iglob('/home/eddie/Downloads/nsf_awards2/20*/.xml'):
+        yield filenames
 
 
 def initialize_storage(filenames):

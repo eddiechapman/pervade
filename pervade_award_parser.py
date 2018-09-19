@@ -1,10 +1,8 @@
-import os
-import glob
 import csv
-import itertools
+import glob
+import os
 import xml.etree.ElementTree as ET
-from nltk import sent_tokenize, word_tokenize
-from nltk.util import ngrams
+from nltk import sent_tokenize, word_tokenize, ngrams
 
 
 def set_directory():
